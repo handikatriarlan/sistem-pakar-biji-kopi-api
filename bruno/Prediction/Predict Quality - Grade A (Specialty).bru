@@ -1,0 +1,84 @@
+meta {
+  name: Predict Quality - Grade A (Specialty)
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{apiPrefix}}/predict
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "aroma": 8.5,
+    "flavor": 8.5,
+    "aftertaste": 8.25,
+    "acidity": 8.5,
+    "body": 8.25,
+    "balance": 8.5,
+    "uniformity": 10.0,
+    "clean_cup": 10.0,
+    "sweetness": 10.0,
+    "moisture_percentage": 10.5
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+  res.body.data.prediction.grade: eq A
+  res.body.data.prediction.confidence: isNumber
+  res.body.data.feature_analysis: isJson
+  res.body.data.recommendations: isJson
+}
+
+tests {
+  test("should predict Grade A for specialty coffee", function() {
+    const data = res.getBody();
+    expect(data.data.prediction.grade).to.equal("A");
+  });
+  
+  test("should have high confidence", function() {
+    const data = res.getBody();
+    expect(data.data.prediction.confidence).to.be.greaterThan(0.5);
+  });
+  
+  test("should return grade info", function() {
+    const data = res.getBody();
+    expect(data.data.prediction.grade_info).to.have.property("label");
+    expect(data.data.prediction.grade_info.label).to.include("Specialty");
+  });
+  
+  test("should return feature analysis", function() {
+    const data = res.getBody();
+    expect(data.data.feature_analysis).to.be.an("array");
+    expect(data.data.feature_analysis.length).to.equal(10);
+  });
+  
+  test("should return recommendations", function() {
+    const data = res.getBody();
+    expect(data.data.recommendations).to.be.an("array");
+  });
+  
+  test("should return class probabilities", function() {
+    const data = res.getBody();
+    expect(data.data.prediction.probabilities).to.have.property("A");
+    expect(data.data.prediction.probabilities).to.have.property("B");
+    expect(data.data.prediction.probabilities).to.have.property("C");
+  });
+}
+
+docs {
+  # Predict Coffee Quality - Grade A (Specialty)
+  
+  Test prediction with high-quality coffee features that should result in Grade A.
+  
+  ## Input Features (Specialty Grade Example)
+  High scores across all sensory attributes (8.0+) with perfect uniformity, clean cup, and sweetness.
+  
+  ## Expected Result
+  - Grade: A (Specialty Grade)
+  - Total Cup Points: ≥ 85
+}

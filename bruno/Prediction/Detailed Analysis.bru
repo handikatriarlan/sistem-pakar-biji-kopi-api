@@ -1,0 +1,89 @@
+meta {
+  name: Detailed Analysis
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{apiPrefix}}/predict/analyze
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "aroma": 8.0,
+    "flavor": 7.75,
+    "aftertaste": 7.5,
+    "acidity": 8.0,
+    "body": 7.5,
+    "balance": 7.75,
+    "uniformity": 10.0,
+    "clean_cup": 10.0,
+    "sweetness": 10.0,
+    "moisture_percentage": 10.8
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+  res.body.data.prediction: isJson
+  res.body.data.score_breakdown: isJson
+  res.body.data.feature_analysis: isJson
+  res.body.data.recommendations: isJson
+  res.body.data.quality_summary: isJson
+}
+
+tests {
+  test("should return prediction", function() {
+    const data = res.getBody();
+    expect(data.data.prediction).to.have.property("grade");
+    expect(data.data.prediction).to.have.property("confidence");
+  });
+  
+  test("should return score breakdown", function() {
+    const data = res.getBody();
+    const breakdown = data.data.score_breakdown;
+    expect(breakdown).to.have.property("sensory_total");
+    expect(breakdown).to.have.property("individual_scores");
+    expect(breakdown).to.have.property("moisture");
+  });
+  
+  test("should have correct sensory total", function() {
+    const data = res.getBody();
+    const scores = data.data.score_breakdown.individual_scores;
+    const total = Object.values(scores).reduce((a, b) => a + b, 0);
+    expect(data.data.score_breakdown.sensory_total).to.be.closeTo(total, 0.1);
+  });
+  
+  test("should return quality summary", function() {
+    const data = res.getBody();
+    expect(data.data.quality_summary).to.have.property("strengths");
+    expect(data.data.quality_summary).to.have.property("areas_for_improvement");
+    expect(data.data.quality_summary.strengths).to.be.an("array");
+    expect(data.data.quality_summary.areas_for_improvement).to.be.an("array");
+  });
+  
+  test("should return feature analysis with status", function() {
+    const data = res.getBody();
+    data.data.feature_analysis.forEach(feature => {
+      expect(feature).to.have.property("name");
+      expect(feature).to.have.property("status");
+      expect(feature).to.have.property("value");
+    });
+  });
+}
+
+docs {
+  # Detailed Analysis
+  
+  Get detailed analysis of coffee quality features with comprehensive breakdown.
+  
+  ## Response Includes
+  - **Prediction**: Grade and confidence
+  - **Score Breakdown**: Sensory total, individual scores, moisture
+  - **Feature Analysis**: Status and value for each feature
+  - **Recommendations**: Improvement suggestions
+  - **Quality Summary**: Strengths and areas for improvement
+}

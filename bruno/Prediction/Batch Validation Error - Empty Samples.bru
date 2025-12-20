@@ -1,0 +1,39 @@
+meta {
+  name: Batch Validation Error - Exceeds Max Samples
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{apiPrefix}}/predict/batch
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "samples": []
+  }
+}
+
+assert {
+  res.status: eq 422
+}
+
+tests {
+  test("should return 422 for empty samples", function() {
+    expect(res.getStatus()).to.equal(422);
+  });
+}
+
+docs {
+  # Batch Validation Error - Empty Samples
+  
+  Test validation error when batch prediction receives empty samples array.
+  
+  ## Test Case
+  Empty samples array
+  
+  ## Expected Result
+  - HTTP 422 Unprocessable Entity
+}

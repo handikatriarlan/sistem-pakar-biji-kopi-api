@@ -1,0 +1,77 @@
+meta {
+  name: Get Training Metrics
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{apiPrefix}}/model/metrics
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+  res.body.data.overall_metrics: isJson
+  res.body.data.cross_validation: isJson
+  res.body.data.confusion_matrix: isJson
+}
+
+tests {
+  test("should return overall metrics", function() {
+    const data = res.getBody();
+    const metrics = data.data.overall_metrics;
+    expect(metrics).to.have.property("accuracy");
+    expect(metrics).to.have.property("precision_macro");
+    expect(metrics).to.have.property("recall_macro");
+    expect(metrics).to.have.property("f1_macro");
+  });
+  
+  test("should have valid metric ranges", function() {
+    const data = res.getBody();
+    const metrics = data.data.overall_metrics;
+    expect(metrics.accuracy).to.be.within(0, 1);
+    expect(metrics.precision_macro).to.be.within(0, 1);
+    expect(metrics.recall_macro).to.be.within(0, 1);
+    expect(metrics.f1_macro).to.be.within(0, 1);
+  });
+  
+  test("should return cross-validation scores", function() {
+    const data = res.getBody();
+    const cv = data.data.cross_validation;
+    expect(cv).to.have.property("cv_accuracy_mean");
+    expect(cv).to.have.property("cv_accuracy_std");
+    expect(cv.cv_accuracy_mean).to.be.within(0, 1);
+  });
+  
+  test("should return confusion matrix", function() {
+    const data = res.getBody();
+    expect(data.data.confusion_matrix).to.be.an("array");
+    expect(data.data.confusion_matrix.length).to.equal(3);
+  });
+  
+  test("should return per-class metrics", function() {
+    const data = res.getBody();
+    expect(data.data.per_class_metrics).to.be.an("object");
+  });
+  
+  test("should return training info", function() {
+    const data = res.getBody();
+    expect(data.data.training_info).to.have.property("iterations");
+    expect(data.data.training_info).to.have.property("final_loss");
+  });
+}
+
+docs {
+  # Get Training Metrics
+  
+  Get detailed training and evaluation metrics.
+  
+  ## Metrics Included
+  - **Overall Metrics**: Accuracy, Precision, Recall, F1 Score
+  - **Cross-Validation**: Mean and standard deviation of CV scores
+  - **Confusion Matrix**: 3x3 matrix for Grade A, B, C
+  - **Per-Class Metrics**: Precision, recall, F1 for each grade
+  - **Training Info**: Iterations, final loss
+}

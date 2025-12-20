@@ -1,0 +1,92 @@
+meta {
+  name: Get Cupping Guide
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{apiPrefix}}/reference/cupping-guide
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+  res.body.data.protocol: eq SCA Cupping Protocol
+  res.body.data.steps: isJson
+  res.body.data.scoring_scale: isJson
+}
+
+tests {
+  test("should return SCA Cupping Protocol", function() {
+    const data = res.getBody();
+    expect(data.data.protocol).to.equal("SCA Cupping Protocol");
+  });
+  
+  test("should have 4 cupping steps", function() {
+    const data = res.getBody();
+    expect(data.data.steps.length).to.equal(4);
+  });
+  
+  test("should have proper step structure", function() {
+    const data = res.getBody();
+    data.data.steps.forEach(step => {
+      expect(step).to.have.property("step");
+      expect(step).to.have.property("name");
+      expect(step).to.have.property("description");
+    });
+  });
+  
+  test("should include Fragrance/Aroma step", function() {
+    const data = res.getBody();
+    const aromaStep = data.data.steps.find(s => s.name.includes("Aroma"));
+    expect(aromaStep).to.exist;
+    expect(aromaStep.step).to.equal(1);
+  });
+  
+  test("should include Tasting step", function() {
+    const data = res.getBody();
+    const tastingStep = data.data.steps.find(s => s.name === "Tasting");
+    expect(tastingStep).to.exist;
+  });
+  
+  test("should have scoring scale", function() {
+    const data = res.getBody();
+    const scale = data.data.scoring_scale;
+    expect(scale).to.have.property("6.00-6.75");
+    expect(scale).to.have.property("7.00-7.75");
+    expect(scale).to.have.property("8.00-8.75");
+    expect(scale).to.have.property("9.00-9.75");
+  });
+  
+  test("should have specialty threshold", function() {
+    const data = res.getBody();
+    expect(data.data.specialty_threshold).to.equal(80);
+  });
+  
+  test("should have reference URL", function() {
+    const data = res.getBody();
+    expect(data.data.reference_url).to.include("sca.coffee");
+  });
+}
+
+docs {
+  # Get Cupping Guide
+  
+  Get SCA cupping protocol guide for reference.
+  
+  ## Cupping Steps
+  1. **Fragrance/Aroma**: Evaluate dry and wet aroma
+  2. **Breaking the Crust**: Break crust and evaluate released aroma
+  3. **Tasting**: Slurp and evaluate flavor, aftertaste, acidity, body, balance
+  4. **Scoring**: Score each attribute (6-10 for specialty)
+  
+  ## Scoring Scale
+  | Score Range | Quality |
+  |-------------|---------|
+  | 6.00-6.75 | Good |
+  | 7.00-7.75 | Very Good |
+  | 8.00-8.75 | Excellent |
+  | 9.00-9.75 | Outstanding |
+}

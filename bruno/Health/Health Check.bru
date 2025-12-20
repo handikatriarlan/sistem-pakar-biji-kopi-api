@@ -1,0 +1,48 @@
+meta {
+  name: Health Check
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{apiPrefix}}/health
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.status: eq healthy
+  res.body.model_status: in [ready, not_ready]
+  res.body.version: isString
+  res.body.timestamp: isString
+}
+
+tests {
+  test("should return healthy status", function() {
+    const data = res.getBody();
+    expect(data.status).to.equal("healthy");
+  });
+  
+  test("should have valid version format", function() {
+    const data = res.getBody();
+    expect(data.version).to.match(/^\d+\.\d+\.\d+$/);
+  });
+  
+  test("should have valid timestamp", function() {
+    const data = res.getBody();
+    expect(new Date(data.timestamp)).to.be.a("date");
+  });
+}
+
+docs {
+  # Health Check Endpoint
+  
+  Check API and model health status.
+  
+  ## Response
+  - `status`: Service status (healthy/unhealthy)
+  - `model_status`: Model status (ready/not_ready)
+  - `version`: API version
+  - `timestamp`: Current timestamp
+}

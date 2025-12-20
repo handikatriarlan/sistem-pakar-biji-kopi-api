@@ -1,0 +1,115 @@
+meta {
+  name: Batch Prediction
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{apiPrefix}}/predict/batch
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "samples": [
+      {
+        "aroma": 8.5,
+        "flavor": 8.5,
+        "aftertaste": 8.25,
+        "acidity": 8.5,
+        "body": 8.25,
+        "balance": 8.5,
+        "uniformity": 10.0,
+        "clean_cup": 10.0,
+        "sweetness": 10.0,
+        "moisture_percentage": 10.5
+      },
+      {
+        "aroma": 7.5,
+        "flavor": 7.5,
+        "aftertaste": 7.25,
+        "acidity": 7.5,
+        "body": 7.5,
+        "balance": 7.5,
+        "uniformity": 10.0,
+        "clean_cup": 10.0,
+        "sweetness": 10.0,
+        "moisture_percentage": 11.0
+      },
+      {
+        "aroma": 6.5,
+        "flavor": 6.5,
+        "aftertaste": 6.25,
+        "acidity": 6.5,
+        "body": 6.5,
+        "balance": 6.5,
+        "uniformity": 8.0,
+        "clean_cup": 8.0,
+        "sweetness": 8.0,
+        "moisture_percentage": 12.5
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+  res.body.data.predictions: isJson
+  res.body.data.summary: isJson
+  res.body.data.summary.total_samples: eq 3
+}
+
+tests {
+  test("should process all samples", function() {
+    const data = res.getBody();
+    expect(data.data.predictions.length).to.equal(3);
+    expect(data.data.summary.total_samples).to.equal(3);
+  });
+  
+  test("should return grade distribution", function() {
+    const data = res.getBody();
+    const dist = data.data.summary.grade_distribution;
+    expect(dist).to.have.property("A");
+    expect(dist).to.have.property("B");
+    expect(dist).to.have.property("C");
+  });
+  
+  test("should have average confidence", function() {
+    const data = res.getBody();
+    expect(data.data.summary.average_confidence).to.be.within(0, 1);
+  });
+  
+  test("should have prediction for each sample", function() {
+    const data = res.getBody();
+    data.data.predictions.forEach((pred, index) => {
+      expect(pred).to.have.property("prediction");
+      expect(pred.prediction).to.have.property("grade");
+      expect(pred.prediction).to.have.property("confidence");
+    });
+  });
+  
+  test("should predict different grades for different quality samples", function() {
+    const data = res.getBody();
+    const grades = data.data.predictions.map(p => p.prediction.grade);
+    expect(grades).to.include("A");
+    expect(grades).to.include("B");
+    expect(grades).to.include("C");
+  });
+}
+
+docs {
+  # Batch Prediction
+  
+  Predict quality for multiple coffee samples at once (max 100 samples per request).
+  
+  ## Use Case
+  - Quality control for multiple batches
+  - Comparative analysis of coffee samples
+  - Bulk processing for inventory assessment
+  
+  ## Response
+  - Individual predictions for each sample
+  - Summary statistics (grade distribution, average confidence)
+}

@@ -1,0 +1,40 @@
+meta {
+  name: Readiness Check
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{apiPrefix}}/health/ready
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.ready: isBoolean
+  res.body.message: isString
+}
+
+tests {
+  test("should return readiness status", function() {
+    const data = res.getBody();
+    expect(data).to.have.property("ready");
+    expect(data).to.have.property("message");
+  });
+  
+  test("should have boolean ready field", function() {
+    const data = res.getBody();
+    expect(typeof data.ready).to.equal("boolean");
+  });
+}
+
+docs {
+  # Readiness Check
+  
+  Check if service is ready to accept requests.
+  
+  ## Response
+  - `ready`: Boolean indicating if service is ready
+  - `message`: Status message
+}

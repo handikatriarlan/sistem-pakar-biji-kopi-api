@@ -1,0 +1,53 @@
+meta {
+  name: Get Model Status
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{apiPrefix}}/model/status
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+  res.body.data.is_trained: isBoolean
+  res.body.data.model_files_exist: isJson
+}
+
+tests {
+  test("should return training status", function() {
+    const data = res.getBody();
+    expect(typeof data.data.is_trained).to.equal("boolean");
+  });
+  
+  test("should return model files existence", function() {
+    const data = res.getBody();
+    const files = data.data.model_files_exist;
+    expect(files).to.have.property("model");
+    expect(files).to.have.property("scaler");
+    expect(files).to.have.property("metadata");
+  });
+  
+  test("should have training date if trained", function() {
+    const data = res.getBody();
+    if (data.data.is_trained) {
+      expect(data.data.training_date).to.be.a("string");
+      expect(data.data.training_samples).to.be.a("number");
+    }
+  });
+}
+
+docs {
+  # Get Model Status
+  
+  Check current model training status.
+  
+  ## Response
+  - `is_trained`: Whether model is trained
+  - `training_date`: When model was trained
+  - `training_samples`: Number of samples used for training
+  - `model_files_exist`: Status of model files (model, scaler, metadata)
+}

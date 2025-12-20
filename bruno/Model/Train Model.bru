@@ -1,0 +1,71 @@
+meta {
+  name: Train Model
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{apiPrefix}}/model/train
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+  res.body.data.training_completed: eq true
+  res.body.data.metrics: isJson
+  res.body.data.training_history: isJson
+}
+
+tests {
+  test("should complete training successfully", function() {
+    const data = res.getBody();
+    expect(data.success).to.equal(true);
+    expect(data.data.training_completed).to.equal(true);
+  });
+  
+  test("should return training metrics", function() {
+    const data = res.getBody();
+    expect(data.data.metrics).to.have.property("accuracy");
+    expect(data.data.metrics).to.have.property("precision_macro");
+    expect(data.data.metrics).to.have.property("recall_macro");
+    expect(data.data.metrics).to.have.property("f1_macro");
+  });
+  
+  test("should have valid accuracy", function() {
+    const data = res.getBody();
+    expect(data.data.metrics.accuracy).to.be.within(0, 1);
+  });
+  
+  test("should return training history", function() {
+    const data = res.getBody();
+    expect(data.data.training_history).to.have.property("n_iterations");
+    expect(data.data.training_history).to.have.property("final_loss");
+  });
+  
+  test("should have samples used count", function() {
+    const data = res.getBody();
+    expect(data.data.samples_used).to.be.a("number");
+    expect(data.data.samples_used).to.be.greaterThan(0);
+  });
+}
+
+docs {
+  # Train Model
+  
+  Train or retrain the Backpropagation Neural Network model.
+  
+  ## Training Process
+  1. Load and preprocess dataset
+  2. Split into training/test sets (80/20)
+  3. Train using backpropagation algorithm
+  4. Evaluate on test set
+  5. Save trained model
+  
+  ## Response
+  - Training completion status
+  - Training metrics (accuracy, precision, recall, F1)
+  - Training history (iterations, loss)
+  - Network architecture details
+}

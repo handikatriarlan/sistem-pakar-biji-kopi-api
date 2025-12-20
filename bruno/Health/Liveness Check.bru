@@ -1,0 +1,32 @@
+meta {
+  name: Liveness Check
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{apiPrefix}}/health/live
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.alive: eq true
+}
+
+tests {
+  test("should return alive true", function() {
+    const data = res.getBody();
+    expect(data.alive).to.equal(true);
+  });
+}
+
+docs {
+  # Liveness Check
+  
+  Simple liveness check to verify service is alive.
+  
+  ## Response
+  - `alive`: Always returns true if service is running
+}

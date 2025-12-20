@@ -1,0 +1,66 @@
+meta {
+  name: Get Network Architecture
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{apiPrefix}}/model/architecture
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+  res.body.data.algorithm: eq Backpropagation Neural Network
+  res.body.data.architecture: isJson
+  res.body.data.training_config: isJson
+}
+
+tests {
+  test("should return Backpropagation algorithm", function() {
+    const data = res.getBody();
+    expect(data.data.algorithm).to.equal("Backpropagation Neural Network");
+  });
+  
+  test("should have correct input neurons", function() {
+    const data = res.getBody();
+    expect(data.data.architecture.input_neurons).to.equal(10);
+  });
+  
+  test("should have correct output neurons", function() {
+    const data = res.getBody();
+    expect(data.data.architecture.output_neurons).to.equal(3);
+  });
+  
+  test("should have hidden layers configuration", function() {
+    const data = res.getBody();
+    expect(data.data.architecture.hidden_layers).to.be.an("array");
+    expect(data.data.architecture.hidden_layers.length).to.be.greaterThan(0);
+  });
+  
+  test("should have training configuration", function() {
+    const data = res.getBody();
+    expect(data.data.training_config).to.have.property("learning_rate");
+    expect(data.data.training_config).to.have.property("optimizer");
+    expect(data.data.training_config).to.have.property("activation");
+  });
+}
+
+docs {
+  # Get Network Architecture
+  
+  Get detailed Backpropagation Neural Network architecture information.
+  
+  ## Architecture Details
+  - Input Layer: 10 neurons (one per feature)
+  - Hidden Layers: 64 → 32 → 16 neurons (ReLU activation)
+  - Output Layer: 3 neurons (Softmax for classification)
+  
+  ## Training Config
+  - Learning rate
+  - Max iterations
+  - Optimizer (Adam)
+  - Activation function
+}

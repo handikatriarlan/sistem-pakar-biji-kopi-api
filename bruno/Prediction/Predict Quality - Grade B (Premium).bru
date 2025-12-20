@@ -1,0 +1,69 @@
+meta {
+  name: Predict Quality - Grade B (Premium)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{apiPrefix}}/predict
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "aroma": 7.5,
+    "flavor": 7.5,
+    "aftertaste": 7.25,
+    "acidity": 7.5,
+    "body": 7.5,
+    "balance": 7.5,
+    "uniformity": 10.0,
+    "clean_cup": 10.0,
+    "sweetness": 10.0,
+    "moisture_percentage": 11.0
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+  res.body.data.prediction.grade: eq B
+  res.body.data.prediction.confidence: isNumber
+}
+
+tests {
+  test("should predict Grade B for premium coffee", function() {
+    const data = res.getBody();
+    expect(data.data.prediction.grade).to.equal("B");
+  });
+  
+  test("should return Premium grade label", function() {
+    const data = res.getBody();
+    expect(data.data.prediction.grade_info.label).to.include("Premium");
+  });
+  
+  test("should have reasonable confidence", function() {
+    const data = res.getBody();
+    expect(data.data.prediction.confidence).to.be.within(0, 1);
+  });
+  
+  test("should have feature analysis with improvement suggestions", function() {
+    const data = res.getBody();
+    const needsImprovement = data.data.feature_analysis.filter(f => f.status === "good" || f.status === "needs_improvement");
+    expect(needsImprovement.length).to.be.greaterThan(0);
+  });
+}
+
+docs {
+  # Predict Coffee Quality - Grade B (Premium)
+  
+  Test prediction with medium-quality coffee features that should result in Grade B.
+  
+  ## Input Features (Premium Grade Example)
+  Good scores (7.0-7.9) on sensory attributes with perfect quality scores.
+  
+  ## Expected Result
+  - Grade: B (Premium Grade)
+  - Total Cup Points: 80-84.99
+}

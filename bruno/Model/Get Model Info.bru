@@ -1,0 +1,54 @@
+meta {
+  name: Get Model Info
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{apiPrefix}}/model/info
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+  res.body.message: isString
+  res.body.timestamp: isString
+  res.body.data: isJson
+}
+
+tests {
+  test("should return success true", function() {
+    const data = res.getBody();
+    expect(data.success).to.equal(true);
+  });
+  
+  test("should contain model architecture", function() {
+    const data = res.getBody();
+    expect(data.data).to.have.property("architecture");
+  });
+  
+  test("should contain training metrics", function() {
+    const data = res.getBody();
+    expect(data.data).to.have.property("metrics");
+  });
+  
+  test("should have accuracy metric", function() {
+    const data = res.getBody();
+    expect(data.data.metrics).to.have.property("accuracy");
+    expect(data.data.metrics.accuracy).to.be.within(0, 1);
+  });
+}
+
+docs {
+  # Get Model Information
+  
+  Get comprehensive information about the trained Backpropagation Neural Network model.
+  
+  ## Response
+  - Model architecture details
+  - Training metrics (accuracy, precision, recall, F1)
+  - Network configuration
+  - Training history
+}

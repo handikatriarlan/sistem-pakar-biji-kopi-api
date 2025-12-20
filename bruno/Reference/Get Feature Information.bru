@@ -1,0 +1,94 @@
+meta {
+  name: Get Feature Information
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{apiPrefix}}/reference/features
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+  res.body.data.features: isJson
+  res.body.data.total_features: eq 10
+  res.body.data.categories: isJson
+}
+
+tests {
+  test("should return 10 features", function() {
+    const data = res.getBody();
+    expect(data.data.features.length).to.equal(10);
+    expect(data.data.total_features).to.equal(10);
+  });
+  
+  test("should have all required features", function() {
+    const data = res.getBody();
+    const featureNames = data.data.features.map(f => f.name);
+    const required = ["aroma", "flavor", "aftertaste", "acidity", "body", 
+                      "balance", "uniformity", "clean_cup", "sweetness", "moisture_percentage"];
+    required.forEach(name => {
+      expect(featureNames).to.include(name);
+    });
+  });
+  
+  test("should have proper feature structure", function() {
+    const data = res.getBody();
+    data.data.features.forEach(feature => {
+      expect(feature).to.have.property("name");
+      expect(feature).to.have.property("display_name");
+      expect(feature).to.have.property("description");
+      expect(feature).to.have.property("min");
+      expect(feature).to.have.property("max");
+      expect(feature).to.have.property("category");
+    });
+  });
+  
+  test("should have sensory category features", function() {
+    const data = res.getBody();
+    const sensory = data.data.features.filter(f => f.category === "sensory");
+    expect(sensory.length).to.be.greaterThan(0);
+  });
+  
+  test("should have quality category features", function() {
+    const data = res.getBody();
+    const quality = data.data.features.filter(f => f.category === "quality");
+    expect(quality.length).to.be.greaterThan(0);
+  });
+  
+  test("should have physical category features", function() {
+    const data = res.getBody();
+    const physical = data.data.features.filter(f => f.category === "physical");
+    expect(physical.length).to.be.greaterThan(0);
+  });
+  
+  test("should have category descriptions", function() {
+    const data = res.getBody();
+    expect(data.data.categories).to.have.property("sensory");
+    expect(data.data.categories).to.have.property("quality");
+    expect(data.data.categories).to.have.property("physical");
+  });
+}
+
+docs {
+  # Get Feature Information
+  
+  Get detailed information about input features for prediction.
+  
+  ## Feature Categories
+  - **Sensory**: Aroma, Flavor, Aftertaste, Acidity, Body, Balance
+  - **Quality**: Uniformity, Clean Cup, Sweetness
+  - **Physical**: Moisture Percentage
+  
+  ## Feature Properties
+  - Name and display name
+  - Description
+  - Min/Max values
+  - Step increment
+  - Category
+  - Weight (importance)
+  - Tips for evaluation
+}

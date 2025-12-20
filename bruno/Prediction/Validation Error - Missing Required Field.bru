@@ -1,0 +1,54 @@
+meta {
+  name: Validation Error - Missing Required Field
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{apiPrefix}}/predict
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "aroma": 8.0,
+    "flavor": 8.0,
+    "aftertaste": 7.5,
+    "acidity": 8.0,
+    "body": 7.5,
+    "balance": 7.5,
+    "uniformity": 10.0,
+    "clean_cup": 10.0
+  }
+}
+
+assert {
+  res.status: eq 422
+  res.body.detail: isJson
+}
+
+tests {
+  test("should return 422 validation error", function() {
+    expect(res.getStatus()).to.equal(422);
+  });
+  
+  test("should indicate missing fields", function() {
+    const data = res.getBody();
+    expect(data.detail).to.be.an("array");
+    expect(data.detail.length).to.be.greaterThan(0);
+  });
+}
+
+docs {
+  # Validation Error - Missing Required Field
+  
+  Test validation error when required fields are missing.
+  
+  ## Test Case
+  Missing `sweetness` and `moisture_percentage` fields
+  
+  ## Expected Result
+  - HTTP 422 Unprocessable Entity
+  - Error details indicating missing fields
+}

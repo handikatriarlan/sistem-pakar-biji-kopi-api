@@ -1,0 +1,85 @@
+meta {
+  name: Get Grade Information
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{apiPrefix}}/reference/grades
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+  res.body.data.grades: isJson
+  res.body.data.scoring_system: isString
+}
+
+tests {
+  test("should return all three grades", function() {
+    const data = res.getBody();
+    expect(data.data.grades.length).to.equal(3);
+  });
+  
+  test("should have Grade A (Specialty)", function() {
+    const data = res.getBody();
+    const gradeA = data.data.grades.find(g => g.grade === "A");
+    expect(gradeA).to.exist;
+    expect(gradeA.min_score).to.equal(85);
+    expect(gradeA.label).to.include("Specialty");
+  });
+  
+  test("should have Grade B (Premium)", function() {
+    const data = res.getBody();
+    const gradeB = data.data.grades.find(g => g.grade === "B");
+    expect(gradeB).to.exist;
+    expect(gradeB.min_score).to.equal(80);
+    expect(gradeB.max_score).to.be.lessThan(85);
+    expect(gradeB.label).to.include("Premium");
+  });
+  
+  test("should have Grade C (Below Premium)", function() {
+    const data = res.getBody();
+    const gradeC = data.data.grades.find(g => g.grade === "C");
+    expect(gradeC).to.exist;
+    expect(gradeC.max_score).to.be.lessThan(80);
+  });
+  
+  test("should have color codes for each grade", function() {
+    const data = res.getBody();
+    data.data.grades.forEach(grade => {
+      expect(grade).to.have.property("color");
+      expect(grade.color).to.match(/^#[0-9a-fA-F]{6}$/);
+    });
+  });
+  
+  test("should reference SCA scoring system", function() {
+    const data = res.getBody();
+    expect(data.data.scoring_system).to.include("SCA");
+  });
+  
+  test("should have total possible points", function() {
+    const data = res.getBody();
+    expect(data.data.total_possible_points).to.equal(100);
+  });
+}
+
+docs {
+  # Get Grade Information
+  
+  Get coffee quality grade classification information based on SCA standards.
+  
+  ## Grade Classifications
+  | Grade | Score Range | Label |
+  |-------|-------------|-------|
+  | A | ≥ 85 | Specialty Grade |
+  | B | 80 - 84.99 | Premium Grade |
+  | C | < 80 | Below Premium |
+  
+  ## Response
+  - Grade details with score ranges
+  - Label and description for each grade
+  - Color codes for UI display
+}

@@ -1,0 +1,42 @@
+meta {
+  name: Retrain Model
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{apiPrefix}}/model/retrain
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+  res.body.data.training_completed: eq true
+}
+
+tests {
+  test("should complete retraining successfully", function() {
+    const data = res.getBody();
+    expect(data.success).to.equal(true);
+    expect(data.data.training_completed).to.equal(true);
+  });
+  
+  test("should return updated metrics", function() {
+    const data = res.getBody();
+    expect(data.data.metrics).to.have.property("accuracy");
+  });
+}
+
+docs {
+  # Retrain Model
+  
+  Alias for train endpoint - retrains the model with fresh data.
+  
+  ## Use Case
+  Use this endpoint when you want to:
+  - Retrain with updated dataset
+  - Reset the model weights
+  - Refresh model performance
+}
