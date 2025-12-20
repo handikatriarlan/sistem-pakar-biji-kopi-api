@@ -261,9 +261,13 @@ class BackpropagationNeuralNetwork:
         }
         
         # Cross-validation score
-        cv_scores = cross_val_score(self.model, X, y, cv=5, scoring='accuracy')
+        # Adjust n_splits based on minimum class count to avoid warnings
+        min_class_count = min(np.bincount(y))
+        n_splits = min(5, min_class_count)
+        cv_scores = cross_val_score(self.model, X, y, cv=n_splits, scoring='accuracy')
         self.metrics["cv_accuracy_mean"] = float(cv_scores.mean())
         self.metrics["cv_accuracy_std"] = float(cv_scores.std())
+        self.metrics["cv_n_splits"] = n_splits
         
         self.is_trained = True
         
