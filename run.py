@@ -1,11 +1,16 @@
-"""Run the Coffee Quality Expert System API."""
+"""
+Application entry point.
+
+Run the Coffee Quality Expert System API server.
+"""
 
 import uvicorn
+from src.core.config import settings
 
 if __name__ == "__main__":
     uvicorn.run(
-        "app.main:app",
-        host="0.0.0.0",
-        port=8000,
+        "src.main:app",
+        host=settings.HOST,
+        port=settings.PORT,
         reload=True
     )

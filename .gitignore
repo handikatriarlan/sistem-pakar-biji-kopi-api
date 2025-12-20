@@ -15,8 +15,8 @@ ENV/
 *.swp
 *.swo
 
-# Models
-models/*.joblib
+# Trained Models (generated at runtime)
+trained_models/*.joblib
 
 # OS
 .DS_Store
