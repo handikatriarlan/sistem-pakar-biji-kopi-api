@@ -37,6 +37,23 @@ from src.core.config import (
 )
 
 
+def convert_numpy_types(obj: Any) -> Any:
+    """
+    Recursively convert numpy types to native Python types for JSON serialization.
+    """
+    if isinstance(obj, np.integer):
+        return int(obj)
+    elif isinstance(obj, np.floating):
+        return float(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif isinstance(obj, dict):
+        return {key: convert_numpy_types(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_numpy_types(item) for item in obj]
+    return obj
+
+
 class BackpropagationNeuralNetwork:
     """
     Coffee Quality Classification using Backpropagation Neural Network.
@@ -147,8 +164,8 @@ class BackpropagationNeuralNetwork:
         y_grades = df["Total Cup Points"].apply(self._assign_grade)
         y_scores = df["Total Cup Points"].values
         
-        # Store grade distribution
-        self.metadata["grade_distribution"] = y_grades.value_counts().to_dict()
+        # Store grade distribution (convert numpy.int64 to native int for JSON serialization)
+        self.metadata["grade_distribution"] = {k: int(v) for k, v in y_grades.value_counts().to_dict().items()}
         self.metadata["feature_statistics"] = {
             col: {
                 "mean": float(X[col].mean()),
@@ -245,29 +262,29 @@ class BackpropagationNeuralNetwork:
         y_pred = self.model.predict(X_test)
         y_pred_proba = self.model.predict_proba(X_test)
         
-        # Calculate metrics
+        # Calculate metrics (convert numpy types for JSON serialization)
         self.metrics = {
             "accuracy": float(accuracy_score(y_test, y_pred)),
             "precision_macro": float(precision_score(y_test, y_pred, average='macro', zero_division=0)),
             "recall_macro": float(recall_score(y_test, y_pred, average='macro', zero_division=0)),
             "f1_macro": float(f1_score(y_test, y_pred, average='macro', zero_division=0)),
             "confusion_matrix": confusion_matrix(y_test, y_pred).tolist(),
-            "classification_report": classification_report(
+            "classification_report": convert_numpy_types(classification_report(
                 y_test, y_pred,
                 target_names=self.label_encoder.classes_,
                 output_dict=True,
                 zero_division=0
-            )
+            ))
         }
         
         # Cross-validation score
         # Adjust n_splits based on minimum class count to avoid warnings
-        min_class_count = min(np.bincount(y))
+        min_class_count = int(min(np.bincount(y)))
         n_splits = min(5, min_class_count)
         cv_scores = cross_val_score(self.model, X, y, cv=n_splits, scoring='accuracy')
         self.metrics["cv_accuracy_mean"] = float(cv_scores.mean())
         self.metrics["cv_accuracy_std"] = float(cv_scores.std())
-        self.metrics["cv_n_splits"] = n_splits
+        self.metrics["cv_n_splits"] = int(n_splits)
         
         self.is_trained = True
         
