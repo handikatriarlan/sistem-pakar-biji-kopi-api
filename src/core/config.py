@@ -73,7 +73,7 @@ BACKPROPAGATION_CONFIG = {
     
     # Regularization
     "alpha": 0.0001,  # L2 regularization
-    "early_stopping": True,
+    "early_stopping": False,
     "validation_fraction": 0.1,
     "n_iter_no_change": 10,
     
