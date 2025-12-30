@@ -878,11 +878,11 @@ curl -X GET "http://localhost:8000/api/v1/model/architecture"
     },
     "training_config": {
       "learning_rate": 0.001,
-      "max_iterations": 500,
+      "max_iterations": 1000,
       "optimizer": "adam",
       "activation": "relu",
       "regularization_alpha": 0.0001,
-      "early_stopping": true,
+      "early_stopping": False,
       "validation_fraction": 0.1,
       "n_iter_no_change": 10,
       "batch_size": "auto"
