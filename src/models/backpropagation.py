@@ -144,8 +144,9 @@ class BackpropagationNeuralNetwork:
         Steps:
         1. Select relevant features
         2. Handle missing values with median imputation
-        3. Create grade labels based on Total Cup Points
-        4. Normalize features using StandardScaler (z-score normalization)
+        3. Save cleaned data to file
+        4. Create grade labels based on Total Cup Points
+        5. Normalize features using StandardScaler (z-score normalization)
         
         Args:
             df: DataFrame with coffee quality data
@@ -159,6 +160,15 @@ class BackpropagationNeuralNetwork:
         
         # Handle missing values with median imputation
         X = X.fillna(X.median())
+        
+        # Save cleaned data to file
+        cleaned_df = X.copy()
+        cleaned_df["Total Cup Points"] = df["Total Cup Points"].values
+        cleaned_df["Grade"] = df["Total Cup Points"].apply(self._assign_grade)
+        
+        cleaned_data_path = os.path.join(os.path.dirname(settings.DATASET_PATH), "cleaned_data.csv")
+        cleaned_df.to_csv(cleaned_data_path, index=False)
+        print(f"✅ Cleaned data saved to {cleaned_data_path}")
         
         # Create grade labels from Total Cup Points
         y_grades = df["Total Cup Points"].apply(self._assign_grade)
